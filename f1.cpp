@@ -317,6 +317,35 @@ double matrix::st1()
 
 }
 
+void Algoritnm(matrix M)
+{
+	matrix temp = M;
+	double H = temp.st1();
+	res A(H, temp);
+	A = matrix::Run(A);
+	if (A.err())
+		cout << "Error\n";
+	else
+	{
+		vector<pair<int, int>> result = A.R;
+		cout << M.getResultSum(result) << "\n1 ";
+		int i;
+		for (i = 0; i < result.size(); ++i)
+			if (result[i].first == 1)
+				break;
+		while (result[i].second != 1)
+		{
+			for (int j = 0; j < result.size(); ++j)
+				if (result[i].second == result[j].first)
+				{
+					i = j;
+					cout << result[i].first << ' ';
+					break;
+				}
+		}
+		cout << '\n';
+	}
+}
 
 res matrix::Run(res A) 
 {
@@ -385,7 +414,6 @@ res matrix::Run(res A)
 	return A;
 }
 
-
 int main(int argc, char ** argv)
 {
 	ifstream F;
@@ -395,7 +423,7 @@ int main(int argc, char ** argv)
 	matrix A;
 	switch(argc)
 	{
-	case(2):
+	case(3):
 		if (argv[2][0] != 't')
 		{
 			cout << "Wrong Arguments\n";
@@ -421,7 +449,7 @@ int main(int argc, char ** argv)
 			delete [] X2[i];
 		delete [] X2;
 		break;
-	case (1):
+	case (2):
 		int n;
         F.open(argv[1]);
         if (!F.is_open())
@@ -439,7 +467,15 @@ int main(int argc, char ** argv)
         F.close();
 		A = matrix(X1);
 		break;
-
+	case (1):
+        cout << "Without File\n";
+        cin >> n;
+        for (int i = 0; i < n; ++i)
+        {
+            pair<double, double> N;
+            cin >> N.first >> N.second;
+            X1.push_back(N);
+        }
 		A = matrix(X1);
 		break;
 	default:
