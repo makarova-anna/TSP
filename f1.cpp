@@ -1,18 +1,23 @@
 #include <iostream>
-#include <iostream>
+#include <iomanip>
 #include <vector>
-#include <cmath>
-#include <cstdlib>
+#include <queue>
 #include <string>
 #include <fstream>
+#include <cmath>
+#include <cstdlib>
+
 using namespace std;
 
 double D_MAX = 1000000000;
+
 double dist(double Ax, double Ay, double Bx, double By)
-{
+{ 
     return sqrt(pow(Ax - Bx, 2) + pow(Ay - By, 2));
 }
-struct result;
+
+struct res;
+
 class matrix
 {
 private:
@@ -20,8 +25,10 @@ private:
 	int* Di;
 	int* Dj;
 	unsigned sz;
+
 	void set_M(vector<pair<double, double>> D);
     void set_M(double** D, int n, int* di = NULL, int* dj = NULL);
+
 	double getMin(int I, bool rows = true);
 public:
 	matrix();
@@ -40,7 +47,54 @@ public:
 	static res Run(res A);
     matrix& operator= (const matrix& D);
 
+    friend ostream& operator<< (ostream& T,const matrix &D);
 };
+
+struct res
+{
+	double H;
+	vector <pair<int, int>> R;
+	matrix M;
+	res()
+	{
+		H = -1;
+	}
+	res(double H1, vector <pair<int, int>> R1, matrix mf)
+	{
+		H = H1;
+		R = R1;
+		M = mf;
+	}
+	res(double H1, matrix mf)
+	{
+		H = H1;
+		M = mf;
+	}
+	res(matrix mf)
+	{
+		H = 0;
+		M = mf;
+	}
+	friend bool operator< (const res& A, const res& B);
+	res& operator= (const res& A)
+	{
+		this->H = A.H;
+		this->R = A.R;
+		this->M = A.M;
+		return *this;
+	}
+	bool err()
+	{
+		return H == -1;
+	}
+};
+
+bool operator< (const res& A,const res& B)
+{
+	if (A.H == B.H)
+		return A.R.size() < B.R.size();
+	return A.H > B.H;
+}
 
 matrix::matrix()
 {
@@ -73,6 +127,10 @@ matrix::~matrix()
 	this->clear();
 }
 
+unsigned matrix::size() const
+{
+	return this->sz;
+}
 
 double* matrix::operator[](int i) const
 {
@@ -85,6 +143,24 @@ matrix& matrix::operator= (const matrix& D)
 	this->set_M(D.data, D.sz, D.Di, D.Dj);
 	return *this;
 }
+
+ostream& operator<< (ostream& out,const matrix &D)
+{
+    for (int i = 0; i < D.size(); ++i)
+		out << D.Dj[i] << ' ';
+	out << '\n';
+    for (int i = 0; i < D.size(); ++i)
+    {
+        for(int j = 0; j < D.size(); ++j)
+			if (D[i][j] == D_MAX)
+				out << " inf  ";
+            else
+				out << fixed << setprecision(5) << D[i][j] << ' ';
+        out << ": " << D.Di[i] << '\n';
+    }
+    return out;
+}
+
 void matrix::set_M(double** D, int n, int* di, int* dj)
 {
 	this->clear();
@@ -146,7 +222,6 @@ bool matrix::is_empty() const
 	return sz == 0;
 }
 
-
 void matrix::set(int eI, int eJ, double S)
 {
 	for (int i = 0; i < this->sz; ++i)
@@ -179,11 +254,137 @@ void matrix::erase(int eI, int eJ)
 		if (Dj[i] != eJ)
 			dDj[i - (Dj[i] > eJ)] = this->Dj[i];
 	}
+	for (int i = 0; i < this->sz; ++i)
+		delete [] this->data[i];
+	delete [] this->data;
+	delete [] this->Di;
+	delete [] this->Dj;
+	this->data = B;
+	this->Di = dDi;
+	this->Dj = dDj;
+	this->sz--;
 }
 
-bool operator< (const res& A,const res& B)
+double matrix::getMin(int I, bool rows)
 {
-	if (A.H == B.H)
-		return A.R.size() < B.R.size();
-	return A.H > B.H;
+	double min = D_MAX;
+	for (int i = 0; i < this->sz; i++)
+		if (rows && min > data[I][i])
+			min = data[I][i];
+		else if (min > data[i][I] && !rows)
+			min = data[i][I];
+	return min;
 }
+
+double matrix::getResultSum(vector<pair<int, int>> result)
+{
+	double sum = 0;
+	for (auto I : result)
+		sum += this->data[I.first - 1][I.second - 1];
+	return sum;
+}
+
+double matrix::st1()
+{
+	double sm = 0;
+	//cout << *this << '\n';
+
+	for (int i = 0; i < this->sz; i++)
+	{
+		double min = this->getMin(i, true);
+		if (min == D_MAX)
+			return D_MAX;
+		else if (min != 0)
+			for (int j = 0; j < this->sz; j++)
+				if(this->data[i][j] != D_MAX) this->data[i][j] -= min;
+		sm += min;
+		//cout << min << ' ';
+	}
+	//cout << '\n';
+	for (int i = 0; i < this->sz; i++)
+	{
+		double min = this->getMin(i, false);
+		if (min == D_MAX)
+			return D_MAX;
+		else if (min != 0)
+			for (int j = 0; j < this->sz; j++)
+				if (this->data[j][i] != D_MAX) this->data[j][i] -= min;
+		sm += min;
+		//cout << min << ' ';
+	}
+	//cout << '\n';
+	return sm;
+
+}
+
+
+res matrix::Run(res A) 
+{
+	static priority_queue <res> Q;
+	double H = A.H;
+	vector<pair<int, int>> result = A.R;
+	matrix M = A.M;
+
+	if (M.size() == 1)
+	{
+		result.push_back(make_pair(M.Di[0], M.Dj[0]));
+		return res(H, result, M);
+	}
+
+	M.st1();
+
+	int Max = 0;
+	for (int i = 0; i < M.size(); i++)
+		for (int j = 0; j < M.size(); j++)
+			if (M[i][j] == 0)
+			{
+				M[i][j] = D_MAX;
+				double max = (M.getMin(i, true) == D_MAX || M.getMin(j, false) == D_MAX)? D_MAX: M.getMin(i, true) + M.getMin(j, false);
+				if (max > Max) Max = max;
+				M[i][j] = 0;
+			}
+
+	vector<pair<int, int>> Maxs;
+	for (int i = 0; i < M.size(); i++)
+		for (int j = 0; j < M.size(); j++)
+			if (M[i][j] == 0)
+			{
+				M[i][j] = D_MAX;
+				int max = (M.getMin(i, true) == D_MAX || M.getMin(j, false) == D_MAX)? D_MAX: M.getMin(i, true) + M.getMin(j, false);
+				if (max == Max) Maxs.push_back(make_pair(M.Di[i], M.Dj[j]));
+				M[i][j] = 0;
+			}
+	
+	if (Maxs.size() == 0)
+		return res();
+
+	for (int i = 0; i < Maxs.size(); i++)
+	{
+		result.push_back(Maxs[i]);
+		matrix temp(M);
+		temp.erase(Maxs[i].first, Maxs[i].second);
+		double H1 = temp.st1();
+		Q.push(res(H + H1, result, temp));
+		result.pop_back();
+		if (Max != D_MAX)
+		{
+			matrix temp1(M);
+			temp1.set(Maxs[i].first, Maxs[i].second);
+			Q.push(res(H + Max, result, temp1));
+		}
+	}
+	do
+	{
+		A = Q.top();
+		Q.pop();
+		A = matrix::Run(A);
+		if (Q.empty())
+			return A;
+	}
+	while (A.err());
+	return A;
+}
+
+
+
+
