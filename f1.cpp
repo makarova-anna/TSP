@@ -52,25 +52,14 @@ bool operator< (const res& A,const res& B)
 	return A.H > B.H;
 }
 
-struct result
-{
-	double H;
-	vector <pair<int, int>> R;
-	matrix M;
-	res(double H1, vector <pair<int, int>> R1, matrix mf)
-	{
-		H = H1;
-		R = R1;
-		M = mf;
-	}
 
-
-	friend bool operator< (const res& A, const res& B);
-
-};
 
 int main()
 {
+	int n;
+	vector<pair<double, double>> X1;
+	double** X2;
+	matrix A;
 
     return 0;
 }
