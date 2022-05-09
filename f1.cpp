@@ -386,5 +386,69 @@ res matrix::Run(res A)
 }
 
 
+int main(int argc, char ** argv)
+{
+	ifstream F;
+	int n;
+	vector<pair<double, double>> X1;
+	double** X2;
+	matrix A;
+	switch(argc)
+	{
+	case(2):
+		if (argv[2][0] != 't')
+		{
+			cout << "Wrong Arguments\n";
+			return 0;
+		}
+        F.open(argv[1]);
+        if (!F.is_open())
+        {
+            cout << "Can not open file\n";
+            return 1;
+        }
+        F >> n;
+		X2 = new double* [n];
+        for (int i = 0; i < n; ++i)
+        {
+			X2[i] = new double [n];
+            for (int j = 0; j < n; ++j)
+				F >> X2[i][j];
+		} 
+        F.close();
+		A = matrix(X2, n);
+        for (int i = 0; i < n; ++i)
+			delete [] X2[i];
+		delete [] X2;
+		break;
+	case (1):
+		int n;
+        F.open(argv[1]);
+        if (!F.is_open())
+        {
+            cout << "Can not open file\n";
+            return 1;
+        }
+        F >> n;
+        for (int i = 0; i < n; ++i)
+        {
+            pair<double, double> N;
+            F >> N.first >> N.second;
+            X1.push_back(N);
+        } 
+        F.close();
+		A = matrix(X1);
+		break;
 
+		A = matrix(X1);
+		break;
+	default:
+		cout << "Wrong Argument\n";
+		return 0;
+	}
+	cout << "start\n";
+	Algoritnm(A);
+	cout << "finish\n";
+	return 0;
+}
 
