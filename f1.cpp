@@ -45,6 +45,37 @@ public:
 
 };
 
+matrix::matrix()
+{
+	data = NULL;
+	sz = 0;
+	Di = NULL;
+	Dj = NULL;
+}
+
+matrix::matrix(const matrix &A)
+{
+	this->sz = 0;
+	this->set_M(A.data, A.sz, A.Di, A.Dj);
+}
+
+matrix::matrix(vector<pair<double, double>> D)
+{
+	this->sz = 0;
+	this->set_M(D);
+}
+
+matrix::matrix(double** D, int n, int* di, int* dj)
+{
+	this->sz = 0;
+	this->set_M(D, n, di, dj);
+}
+
+matrix::~matrix()
+{
+	this->clear();
+}
+
 bool operator< (const res& A,const res& B)
 {
 	if (A.H == B.H)
